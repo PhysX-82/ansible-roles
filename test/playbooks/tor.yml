@@ -1,0 +1,4 @@
+- name: Tor install
+  hosts: tor
+  roles:
+    - tor

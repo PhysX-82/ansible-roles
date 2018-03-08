@@ -1,0 +1,43 @@
+---
+
+- name: tor sources.list
+  template: src=tor.list.j2 dest=/etc/apt/sources.list.d/tor.list
+  register: sources_list_result
+
+- name: install dirnmg
+  raw: (apt -y install dirmngr)
+
+- name: download tor gpg key
+  command: gpg --keyserver pool.sks-keyservers.net --recv {{tor_key_fingerprint}}
+  register: tor_key_result
+  changed_when: "'unchanged: 1' not in tor_key_result.stderr"
+  until: tor_key_result|success
+
+- name: write tor key to /root
+  command: >
+    gpg --output {{tor_key_local_file}} --export {{tor_key_fingerprint}}
+  args:
+    creates: "{{tor_key_local_file}}"
+
+- name: add tor key to apt-key
+  apt_key: file={{tor_key_local_file}}
+
+- name: apt-get update
+  apt: update_cache=true cache_valid_time=0
+  when: sources_list_result.changed
+
+- name: install python pip
+  raw: (wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py)
+
+- name: install python pip nyx
+  raw: (pip install nyx)
+
+- name: install tor
+  raw: (apt -y update && apt -y install tor)
+
+- copy:
+    src: files/torrc
+    dest: /etc/tor/torrc
+
+- name: restart tor
+  raw: (systemctl restart tor@default)

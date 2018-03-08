@@ -1,0 +1,13 @@
+# default system users
+user_name: 
+user_ssh_pub_key:
+root_user: 
+
+ansible_user: "{{user_name}}"
+ansible_become_pass: "{{root_pass}}"
+ansible_become_user: "{{root_user}}"
+ansible_become_method: "su"
+
+# generic debian
+apt_current_testing: buster
+apt_current_stable: stretch
